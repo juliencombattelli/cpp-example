@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Service locator implementation using C++17
 //      Inspired from http://gameprogrammingpatterns.com/service-locator.html
+// Build this file using GCC 6.3 at least: 
+//      g++ -std=c++17 -fconcepts service-locator.cpp
 ///////////////////////////////////////////////////////////////////////////////
 #include <iostream>
 #include <utility>
@@ -111,6 +113,22 @@ struct ConsoleLog : ILogService
         std::cout << "ConsoleLog::log(" << msg << ")\n";
     }
 };
+
+struct LoggedAudio : IAudioService
+{
+public:
+    LoggedAudio(IAudioService& audio, ILogService& logger) : m_audio(audio), m_logger(logger) {}
+ 
+    void playSound(int id) override
+    {
+        m_logger.log("play sound #" + std::to_string(id));
+        m_audio.playSound(id);
+    }
+
+private:
+    IAudioService& m_audio;
+    ILogService& m_logger;
+};
 ///////////////////////////////////////////////////////////////////////////////
 
 
@@ -118,6 +136,7 @@ int main()
 {
     // Create the database    
     ServiceDB<ConsoleAudio, ConsoleLog> sdb;
+    LoggedAudio laudio(sdb.get<ConsoleAudio>(), sdb.get<ConsoleLog>());
 
     // Initialize the locators, default service location is NullService
     AudioLocator::init();
